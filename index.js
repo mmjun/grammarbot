@@ -1,3 +1,19 @@
+app.use(express.json()); // Required for parsing Slack's JSON requests
+
+app.post("/slack/events", async (req, res) => {
+  const { type, challenge } = req.body;
+
+  // ✅ Slack URL verification
+  if (type === "url_verification") {
+    return res.status(200).json({ challenge });
+  }
+
+  // Respond quickly so Slack doesn't timeout
+  res.sendStatus(200);
+
+  // (Your event handling code goes below this)
+});
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const axios = require("axios");
