@@ -5,34 +5,52 @@ require("dotenv").config();
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.json()); // Required for parsing Slack's JSON requests
+app.use(express.json());
 
+const BOT_USER_ID = process.env.BOT_USER_ID;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
+
+// ----------------- SLASH COMMAND -----------------
+app.post("/slack/grammarbot", async (req, res) => {
+  const userText = req.body.text;
+
+  // ✅ Respond quickly to avoid Slack timeout
+  res.status(200).json({
+    response_type: "in_channel",
+    text: `🧪 GrammarBot is fixing: "${userText}"`,
+  });
+
+  // Optional: You can send a follow-up message using chat.postMessage here if you want
+});
+
+// ----------------- EVENT SUBSCRIPTIONS -----------------
 app.post("/slack/events", async (req, res) => {
   const { type, challenge, event } = req.body;
 
-  // ✅ 1. Handle Slack's URL verification
+  // ✅ Slack URL verification
   if (type === "url_verification") {
     return res.status(200).json({ challenge });
   }
 
-  // ✅ 2. Always respond quickly to Slack events
+  // ✅ Respond immediately so Slack doesn’t timeout
   res.sendStatus(200);
 
-  // ✅ 3. Skip if this is the bot's own message
+  // Skip bot's own messages
   if (event?.bot_id || event?.subtype === "bot_message") return;
 
-  // ✅ 4. Remove @bot mention if present
+  // Get and clean message text
   let userText = event.text || "";
-  const botUserId = process.env.BOT_USER_ID;
-
-  if (userText.includes(`<@${botUserId}>`)) {
-    userText = userText.replace(`<@${botUserId}>`, "").trim();
+  if (userText.includes(`<@${BOT_USER_ID}>`)) {
+    userText = userText.replace(`<@${BOT_USER_ID}>`, "").trim();
   }
 
-  // ✅ 5. Send text to OpenAI for correction
+  if (!userText) return;
+
   const prompt = `Correct the grammar, spelling, and clarity of this text:\n\n${userText}`;
 
   try {
+    // 🧠 Call OpenAI
     const aiRes = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
@@ -42,7 +60,7 @@ app.post("/slack/events", async (req, res) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
           "Content-Type": "application/json",
         },
       }
@@ -50,7 +68,7 @@ app.post("/slack/events", async (req, res) => {
 
     const corrected = aiRes.data.choices[0].message.content;
 
-    // ✅ 6. Send the response back to the channel/user
+    // ✅ Send reply back to user
     await axios.post(
       "https://slack.com/api/chat.postMessage",
       {
@@ -59,43 +77,18 @@ app.post("/slack/events", async (req, res) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
+          Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
           "Content-Type": "application/json",
         },
       }
     );
-  } catch (err) {
-    console.error("❌ OpenAI or Slack error:", err.message);
+  } catch (error) {
+    console.error("❌ Error handling event:", error.message);
   }
 });
 
-app.post("/slack/grammarbot", async (req, res) => {
-  const userText = req.body.text;
-
-  const prompt = `Correct the grammar, spelling, and clarity of this text:\n\n${userText}`;
-
-  const response = await axios.post(
-    "https://api.openai.com/v1/chat/completions",
-    {
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.2,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  const corrected = response.data.choices[0].message.content;
-
-  res.json({
-    response_type: "in_channel",
-    text: `📝 *Corrected:* \n${corrected}`,
-  });
-});
-
+// ----------------- START SERVER -----------------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Bot running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 GrammarBot is running on port ${PORT}`);
+});
