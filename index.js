@@ -15,13 +15,38 @@ const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
 app.post("/slack/grammarbot", async (req, res) => {
   const userText = req.body.text;
 
-  // ✅ Respond quickly to avoid Slack timeout
-  res.status(200).json({
-    response_type: "in_channel",
-    text: `🧪 GrammarBot is fixing: "${userText}"`,
-  });
+  const prompt = `Correct the grammar, spelling, and clarity of this text:\n\n${userText}`;
 
-  // Optional: You can send a follow-up message using chat.postMessage here if you want
+  try {
+    const aiRes = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.2,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const corrected = aiRes.data.choices[0].message.content;
+
+    // ✅ Return corrected version directly to Slack
+    res.status(200).json({
+      response_type: "in_channel",
+      text: `📝 *Corrected:* \n${corrected}`,
+    });
+  } catch (error) {
+    console.error("OpenAI error:", error.message);
+    res.status(200).json({
+      response_type: "ephemeral",
+      text: "❌ Something went wrong trying to fix your grammar.",
+    });
+  }
 });
 
 // ----------------- EVENT SUBSCRIPTIONS -----------------
