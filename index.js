@@ -1,3 +1,10 @@
+const express = require("express");
+const bodyParser = require("body-parser");
+const axios = require("axios");
+require("dotenv").config();
+
+const app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json()); // Required for parsing Slack's JSON requests
 
 app.post("/slack/events", async (req, res) => {
@@ -13,14 +20,6 @@ app.post("/slack/events", async (req, res) => {
 
   // (Your event handling code goes below this)
 });
-
-const express = require("express");
-const bodyParser = require("body-parser");
-const axios = require("axios");
-require("dotenv").config();
-
-const app = express();
-app.use(bodyParser.urlencoded({ extended: true }));
 
 app.post("/slack/grammarbot", async (req, res) => {
   const userText = req.body.text;
