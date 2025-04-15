@@ -48,23 +48,20 @@ app.post("/slack/grammarbot", async (req, res) => {
 app.post("/slack/events", async (req, res) => {
   const { type, challenge, event } = req.body;
 
-  // ✅ Slack URL verification
   if (type === "url_verification") {
     return res.status(200).json({ challenge });
   }
 
-  // ✅ Acknowledge event quickly
-  res.sendStatus(200);
+  res.sendStatus(200); // Always acknowledge quickly
 
-  // ✅ Only handle messages or app_mention events
+  // ✅ Debug logging
+  console.log("📥 Event received:", JSON.stringify(event, null, 2));
+
   if (!["message", "app_mention"].includes(event?.type)) return;
-
-  // ✅ Ignore bot messages
   if (event?.bot_id || event?.subtype === "bot_message") return;
 
   let userText = event.text || "";
 
-  // ✅ Clean up @mentions
   if (userText.includes(`<@${process.env.BOT_USER_ID}>`)) {
     userText = userText.replace(`<@${process.env.BOT_USER_ID}>`, "").trim();
   }
@@ -91,6 +88,11 @@ app.post("/slack/events", async (req, res) => {
 
     const corrected = aiRes.data.choices[0].message.content;
 
+    if (!event.channel) {
+      console.error("❌ No event.channel provided. Cannot reply.");
+      return;
+    }
+
     await axios.post(
       "https://slack.com/api/chat.postMessage",
       {
@@ -105,7 +107,7 @@ app.post("/slack/events", async (req, res) => {
       }
     );
   } catch (error) {
-    console.error("❌ Error in /slack/events:", error.message);
+    console.error("❌ Error in /slack/events:", error.response?.data || error.message);
   }
 });
 
