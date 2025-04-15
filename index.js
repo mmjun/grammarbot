@@ -7,11 +7,63 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
+// ----------------- SHARED BLOCK GENERATOR -----------------
+function buildMessageBlocks(corrected, tone) {
+  return [
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `📝 *Corrected (${tone}):*\n${corrected}`,
+      },
+    },
+    {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "📋 Copy This",
+          },
+          action_id: "open_copy_modal",
+          value: corrected,
+        },
+        {
+          type: "static_select",
+          action_id: "change_tone",
+          placeholder: {
+            type: "plain_text",
+            text: `Tone: ${tone.charAt(0).toUpperCase() + tone.slice(1)}`,
+          },
+          options: [
+            {
+              text: {
+                type: "plain_text",
+                text: "Casual",
+              },
+              value: "casual",
+            },
+            {
+              text: {
+                type: "plain_text",
+                text: "Professional",
+              },
+              value: "professional",
+            },
+          ],
+        },
+      ],
+    },
+  ];
+}
+
 // ----------------- SLASH COMMAND -----------------
 app.post("/slack/grammarbot", async (req, res) => {
   const userText = req.body.text;
+  const tone = "professional"; // default tone
 
-  const prompt = `Correct the grammar, spelling, and clarity of this text:\n\n${userText}`;
+  const prompt = `Correct the grammar, spelling, and clarity of this text in a ${tone} tone:\n\n${userText}`;
 
   try {
     const aiRes = await axios.post(
@@ -33,7 +85,7 @@ app.post("/slack/grammarbot", async (req, res) => {
 
     res.status(200).json({
       response_type: "in_channel",
-      text: `📝 *Corrected:* \n${corrected}`,
+      blocks: buildMessageBlocks(corrected, tone),
     });
   } catch (error) {
     console.error("❌ Error in slash command:", error.message);
@@ -52,9 +104,8 @@ app.post("/slack/events", async (req, res) => {
     return res.status(200).json({ challenge });
   }
 
-  res.sendStatus(200); // Always acknowledge quickly
+  res.sendStatus(200);
 
-  // ✅ Debug logging
   console.log("📥 Event received:", JSON.stringify(event, null, 2));
 
   if (!["message", "app_mention"].includes(event?.type)) return;
@@ -67,8 +118,8 @@ app.post("/slack/events", async (req, res) => {
   }
 
   if (!userText) return;
-
-  const prompt = `Correct the grammar, spelling, and clarity of this text:\n\n${userText}`;
+  const tone = "professional"; // default tone
+  const prompt = `Correct the grammar, spelling, and clarity of this text in a ${tone} tone:\n\n${userText}`;
 
   try {
     const aiRes = await axios.post(
@@ -97,7 +148,8 @@ app.post("/slack/events", async (req, res) => {
       "https://slack.com/api/chat.postMessage",
       {
         channel: event.channel,
-        text: `📝 *Corrected:* \n${corrected}`,
+        text: "📝 Corrected text available",
+        blocks: buildMessageBlocks(corrected, tone),
       },
       {
         headers: {
@@ -109,6 +161,55 @@ app.post("/slack/events", async (req, res) => {
   } catch (error) {
     console.error("❌ Error in /slack/events:", error.response?.data || error.message);
   }
+});
+
+// ----------------- INTERACTIONS -----------------
+app.post("/slack/interactions", express.urlencoded({ extended: true }), async (req, res) => {
+  const payload = JSON.parse(req.body.payload);
+  const action = payload.actions?.[0];
+
+  if (!action) return res.sendStatus(400);
+
+  if (action.action_id === "open_copy_modal") {
+    const corrected = action.value;
+
+    await axios.post(
+      "https://slack.com/api/views.open",
+      {
+        trigger_id: payload.trigger_id,
+        view: {
+          type: "modal",
+          title: {
+            type: "plain_text",
+            text: "📋 Copy Text",
+          },
+          close: {
+            type: "plain_text",
+            text: "Close",
+          },
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*Corrected Text:*\n\\`\\`${corrected}\\`\\``,
+              },
+            },
+          ],
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return res.sendStatus(200);
+  }
+
+  res.sendStatus(404);
 });
 
 // ----------------- START SERVER -----------------
