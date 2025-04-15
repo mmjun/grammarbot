@@ -184,16 +184,14 @@ app.post("/slack/interactions", express.urlencoded({ extended: true }), async (r
             text: "Close",
           },
           blocks: [
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: `*Corrected Text:*\n\\`\\`\
-${corrected}\n\\`\\`\
-\nUse ⌘+C / Ctrl+C to copy.`,
-              },
-            },
-          ],
+  {
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: `*Corrected Text:*\n\`\`\`\n${corrected}\n\`\`\`\nUse ⌘+C / Ctrl+C to copy.`,
+    },
+  },
+],
         },
       },
       {
