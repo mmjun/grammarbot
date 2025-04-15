@@ -166,8 +166,7 @@ app.post("/slack/interactions", express.urlencoded({ extended: true }), async (r
 
   if (action.action_id === "change_tone") {
     const newTone = action.selected_option.value;
-    const originalText = payload.message.blocks[0]?.text?.text.replace(/📝 \*Corrected.*:\*\n```|```/g, "").trim();
-
+    const originalText = payload.message.blocks[1]?.text?.text.replace(/```/g, "").trim();
     const prompt = `Correct the grammar, spelling, and clarity of this text in a ${newTone} tone:\n\n${originalText}`;
 
     try {
