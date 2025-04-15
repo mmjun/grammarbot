@@ -8,13 +8,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
 // ----------------- SHARED BLOCK GENERATOR -----------------
-function buildMessageBlocks(corrected, tone) {
+function buildMessageBlocks(corrected) {
   return [
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `📝 *Corrected (${tone}):*`,
+        text: `📝 *Corrected:*`,
       },
     },
     {
@@ -24,35 +24,6 @@ function buildMessageBlocks(corrected, tone) {
         text: `\`\`\`\n${corrected}\n\`\`\``,
       },
     },
-    {
-      type: "actions",
-      elements: [
-        {
-          type: "static_select",
-          action_id: "change_tone",
-          placeholder: {
-            type: "plain_text",
-            text: `Tone: ${tone.charAt(0).toUpperCase() + tone.slice(1)}`,
-          },
-          options: [
-            {
-              text: {
-                type: "plain_text",
-                text: "Casual",
-              },
-              value: "casual",
-            },
-            {
-              text: {
-                type: "plain_text",
-                text: "Professional",
-              },
-              value: "professional",
-            },
-          ],
-        },
-      ],
-    },
   ];
 }
 
@@ -60,7 +31,6 @@ function buildMessageBlocks(corrected, tone) {
 app.post("/slack/grammarbot", async (req, res) => {
   const userText = req.body.text;
   const tone = "professional";
-
   const prompt = `Correct the grammar, spelling, and clarity of this text in a ${tone} tone:\n\n${userText}`;
 
   try {
@@ -83,7 +53,7 @@ app.post("/slack/grammarbot", async (req, res) => {
 
     res.status(200).json({
       response_type: "in_channel",
-      blocks: buildMessageBlocks(corrected, tone),
+      blocks: buildMessageBlocks(corrected),
     });
   } catch (error) {
     console.error("❌ Error in slash command:", error.message);
@@ -143,7 +113,7 @@ app.post("/slack/events", async (req, res) => {
       {
         channel: event.channel,
         text: "📝 Corrected text available",
-        blocks: buildMessageBlocks(corrected, tone),
+        blocks: buildMessageBlocks(corrected),
       },
       {
         headers: {
@@ -155,61 +125,6 @@ app.post("/slack/events", async (req, res) => {
   } catch (error) {
     console.error("❌ Error in /slack/events:", error.response?.data || error.message);
   }
-});
-
-// ----------------- INTERACTIONS -----------------
-app.post("/slack/interactions", express.urlencoded({ extended: true }), async (req, res) => {
-  const payload = JSON.parse(req.body.payload);
-  const action = payload.actions?.[0];
-
-  if (!action) return res.sendStatus(400);
-
-  if (action.action_id === "change_tone") {
-    const newTone = action.selected_option.value;
-    const originalText = payload.message.blocks[1]?.text?.text.replace(/```/g, "").trim();
-    const prompt = `Correct the grammar, spelling, and clarity of this text in a ${newTone} tone:\n\n${originalText}`;
-
-    try {
-      const aiRes = await axios.post(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          model: "gpt-4o-mini",
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.2,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const corrected = aiRes.data.choices[0].message.content;
-
-      await axios.post(
-        "https://slack.com/api/chat.update",
-        {
-          channel: payload.channel.id,
-          ts: payload.message.ts,
-          text: "📝 Corrected text updated",
-          blocks: buildMessageBlocks(corrected, newTone),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      return res.sendStatus(200);
-    } catch (error) {
-      console.error("❌ Error updating tone:", error.response?.data || error.message);
-    }
-  }
-
-  res.sendStatus(404);
 });
 
 // ----------------- START SERVER -----------------
