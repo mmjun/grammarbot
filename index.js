@@ -125,6 +125,11 @@ const prompt = `Revise the following customer service message to improve grammar
   }
 });
 
+// ----------------- PING ENDPOINT -----------------
+app.get("/ping", (req, res) => {
+  res.status(200).send("OK");
+});
+
 // ----------------- START SERVER -----------------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
