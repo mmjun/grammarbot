@@ -14,21 +14,14 @@ function buildMessageBlocks(corrected, tone) {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `📝 *Corrected (${tone}):*\n${corrected}`,
+        text: `📝 *Corrected (${tone}):*\n\`\`\`
+${corrected}
+\`\`\``,
       },
     },
     {
       type: "actions",
       elements: [
-        {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "📋 Copy This",
-          },
-          action_id: "open_copy_modal",
-          value: corrected,
-        },
         {
           type: "static_select",
           action_id: "change_tone",
@@ -166,48 +159,9 @@ app.post("/slack/interactions", express.urlencoded({ extended: true }), async (r
 
   if (!action) return res.sendStatus(400);
 
-  if (action.action_id === "open_copy_modal") {
-    const corrected = action.value;
-
-    await axios.post(
-      "https://slack.com/api/views.open",
-      {
-        trigger_id: payload.trigger_id,
-        view: {
-          type: "modal",
-          title: {
-            type: "plain_text",
-            text: "📋 Copy Text",
-          },
-          close: {
-            type: "plain_text",
-            text: "Close",
-          },
-          blocks: [
-  {
-    type: "section",
-    text: {
-      type: "mrkdwn",
-      text: `*Corrected Text:*\n\`\`\`\n${corrected}\n\`\`\`\nUse ⌘+C / Ctrl+C to copy.`,
-    },
-  },
-],
-        },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    return res.sendStatus(200);
-  }
-
   if (action.action_id === "change_tone") {
     const newTone = action.selected_option.value;
-    const originalText = payload.message.blocks[0]?.text?.text.replace(/📝 \*Corrected.*:\*\n/, "");
+    const originalText = payload.message.blocks[0]?.text?.text.replace(/📝 \*Corrected.*:\*\n```|```/g, "").trim();
 
     const prompt = `Correct the grammar, spelling, and clarity of this text in a ${newTone} tone:\n\n${originalText}`;
 
