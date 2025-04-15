@@ -192,7 +192,7 @@ app.post("/slack/interactions", express.urlencoded({ extended: true }), async (r
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*Corrected Text:*\n\\`\\`${corrected}\\`\\``,
+                text: `*Corrected Text:*\n\`\`\`${corrected}\`\`\``,
               },
             },
           ],
