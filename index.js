@@ -31,8 +31,7 @@ function buildMessageBlocks(corrected) {
 app.post("/slack/grammarbot", async (req, res) => {
   const userText = req.body.text;
   const tone = "professional";
-  const prompt = `Correct the grammar, spelling, and clarity of this text in a ${tone} tone:\n\n${userText}`;
-
+const prompt = `Revise the following customer service message to improve grammar, spelling, and clarity in a professional tone. Do not add a subject line, greeting, or closing. Only revise the original message:\n\n${userText}`;
   try {
     const aiRes = await axios.post(
       "https://api.openai.com/v1/chat/completions",
@@ -86,8 +85,7 @@ app.post("/slack/events", async (req, res) => {
   if (!userText) return;
 
   const tone = "professional";
-  const prompt = `Correct the grammar, spelling, and clarity of this text in a ${tone} tone:\n\n${userText}`;
-
+const prompt = `Revise the following customer service message to improve grammar, spelling, and clarity in a professional tone. Do not add a subject line, greeting, or closing. Only revise the original message:\n\n${userText}`;
   try {
     const aiRes = await axios.post(
       "https://api.openai.com/v1/chat/completions",
