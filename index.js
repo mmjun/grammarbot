@@ -61,7 +61,7 @@ function buildMessageBlocks(corrected, tone) {
 // ----------------- SLASH COMMAND -----------------
 app.post("/slack/grammarbot", async (req, res) => {
   const userText = req.body.text;
-  const tone = "professional"; // default tone
+  const tone = "professional";
 
   const prompt = `Correct the grammar, spelling, and clarity of this text in a ${tone} tone:\n\n${userText}`;
 
@@ -106,8 +106,6 @@ app.post("/slack/events", async (req, res) => {
 
   res.sendStatus(200);
 
-  console.log("📥 Event received:", JSON.stringify(event, null, 2));
-
   if (!["message", "app_mention"].includes(event?.type)) return;
   if (event?.bot_id || event?.subtype === "bot_message") return;
 
@@ -118,7 +116,8 @@ app.post("/slack/events", async (req, res) => {
   }
 
   if (!userText) return;
-  const tone = "professional"; // default tone
+
+  const tone = "professional";
   const prompt = `Correct the grammar, spelling, and clarity of this text in a ${tone} tone:\n\n${userText}`;
 
   try {
@@ -139,10 +138,7 @@ app.post("/slack/events", async (req, res) => {
 
     const corrected = aiRes.data.choices[0].message.content;
 
-    if (!event.channel) {
-      console.error("❌ No event.channel provided. Cannot reply.");
-      return;
-    }
+    if (!event.channel) return;
 
     await axios.post(
       "https://slack.com/api/chat.postMessage",
@@ -192,7 +188,9 @@ app.post("/slack/interactions", express.urlencoded({ extended: true }), async (r
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*Corrected Text:*\n\`\`\`${corrected}\`\`\``,
+                text: `*Corrected Text:*\n\\`\\`\
+${corrected}\n\\`\\`\
+\nUse ⌘+C / Ctrl+C to copy.`,
               },
             },
           ],
@@ -207,6 +205,52 @@ app.post("/slack/interactions", express.urlencoded({ extended: true }), async (r
     );
 
     return res.sendStatus(200);
+  }
+
+  if (action.action_id === "change_tone") {
+    const newTone = action.selected_option.value;
+    const originalText = payload.message.blocks[0]?.text?.text.replace(/📝 \*Corrected.*:\*\n/, "");
+
+    const prompt = `Correct the grammar, spelling, and clarity of this text in a ${newTone} tone:\n\n${originalText}`;
+
+    try {
+      const aiRes = await axios.post(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          model: "gpt-4o-mini",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.2,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const corrected = aiRes.data.choices[0].message.content;
+
+      await axios.post(
+        "https://slack.com/api/chat.update",
+        {
+          channel: payload.channel.id,
+          ts: payload.message.ts,
+          text: "📝 Corrected text updated",
+          blocks: buildMessageBlocks(corrected, newTone),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      return res.sendStatus(200);
+    } catch (error) {
+      console.error("❌ Error updating tone:", error.response?.data || error.message);
+    }
   }
 
   res.sendStatus(404);
