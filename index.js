@@ -14,9 +14,14 @@ function buildMessageBlocks(corrected, tone) {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `📝 *Corrected (${tone}):*\n\`\`\`
-${corrected}
-\`\`\``,
+        text: `📝 *Corrected (${tone}):*`,
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `\`\`\`\n${corrected}\n\`\`\``,
       },
     },
     {
