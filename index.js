@@ -86,7 +86,7 @@ app.post("/slack/events", async (req, res) => {
   if (!userText) return;
 
   const tone = "professional";
-const prompt = `Please revise the following customer service message to improve grammar, spelling, and clarity using a professional tone. You may restructure sentences to improve flow, but do not add or remove content unless necessary for clarity. Do not include greetings, sign-offs, or format it like an email. Return only the revised message:\n\n${userText}`;
+const prompt = `Translate the following message into clear, professional English. Correct any grammar or spelling mistakes and improve sentence flow. Do not include greetings or sign-offs. Return only the translated and corrected message:\n\n${userText}`;
   try {
     const aiRes = await axios.post(
       "https://api.openai.com/v1/chat/completions",
