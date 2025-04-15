@@ -28,10 +28,11 @@ function buildMessageBlocks(corrected) {
 }
 
 // ----------------- SLASH COMMAND -----------------
+/*
 app.post("/slack/grammarbot", async (req, res) => {
   const userText = req.body.text;
   const tone = "professional";
-const prompt = `Revise the following customer service message to improve grammar, spelling, clarity in a professional tone, and make the message flow smoothly. Make necessary breaks in paragraphs but no other additional formatting. Revise the original message:\n\n${userText}`;
+const prompt = `Please revise the following customer service message to improve grammar, spelling, and clarity using a professional tone. You may restructure sentences to improve flow, but do not add or remove content unless necessary for clarity. Do not include greetings, sign-offs, or format it like an email. Return only the revised message:\n\n${userText}`;
   try {
     const aiRes = await axios.post(
       "https://api.openai.com/v1/chat/completions",
@@ -62,7 +63,7 @@ const prompt = `Revise the following customer service message to improve grammar
     });
   }
 });
-
+*/
 // ----------------- EVENTS: DMs + @Mentions -----------------
 app.post("/slack/events", async (req, res) => {
   const { type, challenge, event } = req.body;
@@ -85,7 +86,7 @@ app.post("/slack/events", async (req, res) => {
   if (!userText) return;
 
   const tone = "professional";
-const prompt = `Revise the following customer service message to improve grammar, spelling, clarity in a professional tone, and make the message flow smoothly. Make necessary breaks in paragraphs but no other additional formatting. Revise the original message:\n\n${userText}`;
+const prompt = `Please revise the following customer service message to improve grammar, spelling, and clarity using a professional tone. You may restructure sentences to improve flow, but do not add or remove content unless necessary for clarity. Do not include greetings, sign-offs, or format it like an email. Return only the revised message:\n\n${userText}`;
   try {
     const aiRes = await axios.post(
       "https://api.openai.com/v1/chat/completions",
