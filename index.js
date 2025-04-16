@@ -38,7 +38,7 @@ app.post("/slack/help", async (req, res) => {
     });
   }
 
-  const prompt = `Write a clear, professional customer service message for this scenario: "${scenario}". Use empathetic, helpful language. Keep it under 100 words. Return only the message.`;
+const prompt = `Write a clear, professional customer service message for this scenario: "${scenario}". Use empathetic, helpful language. Do not include a greeting or closing. Keep it under 100 words. Return only the message.`;
 
   try {
     const aiRes = await axios.post(
