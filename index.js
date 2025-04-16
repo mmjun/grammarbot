@@ -168,8 +168,7 @@ await axios.post(
 );
 
 try {
-  const prompt = `Please improve the following message for customer service use. Correct grammar and spelling, but also rewrite it with a warm, empathetic, and conversational tone. Keep it clear and professional, and restructure for natural flow. Do not include greetings or closings. Return only the improved message:\n\n${userText}`;
-
+const prompt = `Please improve the following message for customer service use. Correct grammar and spelling, but also rewrite it with a warm, empathetic, and conversational tone. Keep it clear and professional, and restructure for natural flow. Do not include greetings or closings. Return only the improved message. Respond in English:\n\n${userText}`;
   const aiRes = await axios.post(
     "https://api.openai.com/v1/chat/completions",
     {
