@@ -24,6 +24,15 @@ function buildMessageBlocks(corrected) {
         text: `\`\`\`\n${corrected}\n\`\`\``,
       },
     },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "_💡 Tip: Triple-click the box above to copy._",
+        },
+      ],
+    },
   ];
 }
 
