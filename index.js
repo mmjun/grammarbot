@@ -167,44 +167,45 @@ await axios.post(
   }
 );
 
-const prompt = `Please improve the following message for customer service use. Correct grammar and spelling, but also rewrite it with a warm, empathetic, and conversational tone. Keep it clear and professional, and restructure for natural flow. Do not include greetings or closings. Return only the improved message:\n\n${userText}`;
-    const aiRes = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.5,
+try {
+  const prompt = `Please improve the following message for customer service use. Correct grammar and spelling, but also rewrite it with a warm, empathetic, and conversational tone. Keep it clear and professional, and restructure for natural flow. Do not include greetings or closings. Return only the improved message:\n\n${userText}`;
+
+  const aiRes = await axios.post(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.5,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
       },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    }
+  );
 
-    const corrected = aiRes.data.choices[0].message.content;
+  const corrected = aiRes.data.choices[0].message.content;
 
-    if (!event.channel) return;
+  if (!event.channel) return;
 
-    await axios.post(
-      "https://slack.com/api/chat.postMessage",
-      {
-        channel: event.channel,
-        text: "📝 Corrected text available",
-        blocks: buildMessageBlocks(corrected),
+  await axios.post(
+    "https://slack.com/api/chat.postMessage",
+    {
+      channel: event.channel,
+      text: "📝 Corrected text available",
+      blocks: buildMessageBlocks(corrected),
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
+        "Content-Type": "application/json",
       },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-  } catch (error) {
-    console.error("❌ Error in /slack/events:", error.response?.data || error.message);
-  }
-});
+    }
+  );
+} catch (error) {
+  console.error("❌ Error in /slack/events:", error.response?.data || error.message);
+}
 
 // ----------------- PING ENDPOINT -----------------
 app.use("/ping", (req, res) => {
