@@ -168,8 +168,7 @@ await axios.post(
 );
 
 const tone = "professional";
-const prompt = `Translate and improve the following message to be clear, professional, and empathetic for a customer service context. Correct grammar, spelling, and tone. Restructure for flow as needed and vary phrasing slightly between responses to sound more natural. Do not include greetings or closings. Return only the revised message:\n\n${userText}`;
-  try {
+const prompt = `Improve the following message into a clear, professional customer service response. Use empathetic, helpful language. Correct grammar, fix tone, and improve sentence flow. Do not include a greeting or closing. Keep it under 100 words. Return only the message:\n\n${userText}`;  try {
     const aiRes = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
