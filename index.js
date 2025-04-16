@@ -206,6 +206,7 @@ try {
 } catch (error) {
   console.error("❌ Error in /slack/events:", error.response?.data || error.message);
 }
+});
 
 // ----------------- PING ENDPOINT -----------------
 app.use("/ping", (req, res) => {
