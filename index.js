@@ -85,7 +85,21 @@ app.post("/slack/events", async (req, res) => {
 
   if (!userText) return;
 
-  const tone = "professional";
+// Send typing indicator to show the bot is working
+await axios.post(
+  "https://slack.com/api/chat.typing",
+  {
+    channel: event.channel,
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
+
+const tone = "professional";
 const prompt = `Translate the following message into clear, professional English. Correct any grammar or spelling mistakes and improve sentence flow. Do not include greetings or sign-offs. Return only the translated and corrected message:\n\n${userText}`;
   try {
     const aiRes = await axios.post(
