@@ -47,7 +47,7 @@ app.post("/slack/help", async (req, res) => {
     });
   }
 
-const prompt = `Write a clear, professional customer service message for this scenario: "${scenario}". Use empathetic, helpful language. Do not include a greeting or closing. Keep it under 100 words. Return only the message.`;
+const prompt = `Write a clear, professional customer service message for this scenario: "${scenario}". Use empathetic, helpful language and vary phrasing slightly between responses to sound more natural. Do not include a greeting or closing. Keep it under 100 words. Return only the message.`;
 
   try {
     const aiRes = await axios.post(
@@ -168,14 +168,14 @@ await axios.post(
 );
 
 const tone = "professional";
-const prompt = `Translate and improve the following message to be clear, professional, and empathetic for a customer service context. Correct grammar, spelling, and tone. Restructure for flow as needed. Do not include greetings or closings. Return only the revised message:\n\n${userText}`;
+const prompt = `Translate and improve the following message to be clear, professional, and empathetic for a customer service context. Correct grammar, spelling, and tone. Restructure for flow as needed and vary phrasing slightly between responses to sound more natural. Do not include greetings or closings. Return only the revised message:\n\n${userText}`;
   try {
     const aiRes = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.2,
+        temperature: 0.5,
       },
       {
         headers: {
