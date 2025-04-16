@@ -127,7 +127,8 @@ const prompt = `Translate the following message into clear, professional English
 });
 
 // ----------------- PING ENDPOINT -----------------
-app.get("/ping", (req, res) => {
+app.use("/ping", (req, res) => {
+  console.log("📶 /ping endpoint was hit");
   res.status(200).send("OK");
 });
 
