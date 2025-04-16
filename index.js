@@ -27,6 +27,65 @@ function buildMessageBlocks(corrected) {
   ];
 }
 
+// ----------------- SLASH COMMAND: /help -----------------
+app.post("/slack/help", async (req, res) => {
+  const scenario = req.body.text;
+
+  if (!scenario) {
+    return res.status(200).json({
+      response_type: "ephemeral",
+      text: "❗ Please provide a scenario, e.g. `/help refund after 30 days`",
+    });
+  }
+
+  const prompt = `Write a clear, professional customer service message for this scenario: "${scenario}". Use empathetic, helpful language. Keep it under 100 words. Return only the message.`;
+
+  try {
+    const aiRes = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.5,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const message = aiRes.data.choices[0].message.content;
+
+    res.status(200).json({
+      response_type: "ephemeral", // only visible to the user
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `📝 *Suggested Message:*`,
+          },
+        },
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `\`\`\`\n${message}\n\`\`\``,
+          },
+        },
+      ],
+    });
+  } catch (error) {
+    console.error("❌ Error in /help command:", error.message);
+    res.status(200).json({
+      response_type: "ephemeral",
+      text: "❌ Something went wrong while composing your message.",
+    });
+  }
+});
+
 // ----------------- SLASH COMMAND -----------------
 /*
 app.post("/slack/grammarbot", async (req, res) => {
