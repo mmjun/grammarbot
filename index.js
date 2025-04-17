@@ -168,8 +168,7 @@ await axios.post(
 );
 
 try {
-const prompt = `Please revise the following message. Correct grammar, fix spelling, and improve flow while keeping the original tone, structure, and intent. Do not add or remove content. Do not include greetings or closings. Return only the revised message. Respond in English:\n\n${userText}`;  const aiRes = await axios.post(
-    "https://api.openai.com/v1/chat/completions",
+const prompt = `Please revise the following message for customer service use. Correct grammar, fix spelling, and improve flow while keeping the original structure and tone. Gently soften any harsh or blunt language to make it sound more polite and natural. Do not add or remove content. Do not include greetings or closings. Return only the revised message. Respond in English:\n\n${userText}`;    "https://api.openai.com/v1/chat/completions",
     {
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
