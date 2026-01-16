@@ -14,7 +14,7 @@ function buildMessageBlocks(corrected) {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `📝 *Corrected:* ${corrected}`, // ← no code block
+        text: `${corrected}`, // ← no code block
       },
     },
   ];
