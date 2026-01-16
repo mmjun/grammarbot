@@ -14,24 +14,8 @@ function buildMessageBlocks(corrected) {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `📝 *Corrected:*`,
+        text: `📝 *Corrected:* ${corrected}`, // ← no code block
       },
-    },
-    {
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: `\`\`\`\n${corrected}\n\`\`\``,
-      },
-    },
-    {
-      type: "context",
-      elements: [
-        {
-          type: "mrkdwn",
-          text: "_💡 Tip: Triple-click the box above to copy._",
-        },
-      ],
     },
   ];
 }
