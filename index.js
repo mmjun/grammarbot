@@ -192,6 +192,41 @@ try {
 }
 });
 
+// ----------------- FIX ENDPOINT -----------------
+app.post("/fix", async (req, res) => {
+  try {
+    const { text } = req.body;
+
+    if (!text || !text.trim()) {
+      return res.status(400).json({ error: "Missing text" });
+    }
+
+    const prompt = `Please revise the following message. Correct grammar, fix spelling, and improve flow while keeping the original structure, intent, and language. Gently soften any harsh or blunt language to make it sound more polite and natural. Do not add greetings or closings. Do not translate. Return only the revised message:\n\n${text}`;
+
+    const aiRes = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.5,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const corrected = aiRes.data.choices[0].message.content;
+
+    res.json({ corrected });
+  } catch (error) {
+    console.error("❌ /fix error:", error.response?.data || error.message);
+    res.status(500).json({ error: "Correction failed" });
+  }
+});
+
 // ----------------- PING ENDPOINT -----------------
 app.use("/ping", (req, res) => {
   console.log("📶 /ping endpoint was hit");
