@@ -20,6 +20,11 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
+// -----------------------PROMPT -===------------
+function buildPrompt(input) {
+  return `Write a clear, professional customer service message for this scenario: "${input}". Use empathetic, helpful language and vary phrasing slightly between responses to sound more natural. Keep it concise. Return only the message.`;
+
+}
 
 // ----------------- SHARED BLOCK GENERATOR -----------------
 function buildMessageBlocks(corrected) {
@@ -45,7 +50,7 @@ app.post("/slack/help", async (req, res) => {
     });
   }
 
-const prompt = `Write a clear, professional customer service message for this scenario: "${scenario}". Use empathetic, helpful language and vary phrasing slightly between responses to sound more natural. Do not include a greeting or closing. Keep it under 100 words. Return only the message.`;
+const prompt = `Write a clear, professional customer service message for this scenario: "${scenario}". Use empathetic, helpful language and vary phrasing slightly between responses to sound more natural. Keep it concise. Return only the message.`;
 
   try {
     const aiRes = await axios.post(
@@ -215,7 +220,7 @@ app.post("/fix", async (req, res) => {
       return res.status(400).json({ error: "Missing text" });
     }
 
-    const prompt = `Please revise the following message. Correct grammar, fix spelling, and improve flow while keeping the original structure, intent, and language. Gently soften any harsh or blunt language to make it sound more polite and natural. Do not add greetings or closings. Do not translate. Return only the revised message:\n\n${text}`;
+    const prompt = `Please revise the following message for customer service use. Correct grammar, fix spelling, and improve flow while keeping the original structure and tone. Gently soften any harsh or blunt language to make it sound more polite and natural. Do not add or remove content. Do not include greetings or closings. Return only the revised message. Respond in English:\n\n${userText}`;
 
     const aiRes = await axios.post(
       "https://api.openai.com/v1/chat/completions",
