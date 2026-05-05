@@ -22,8 +22,7 @@ app.use(express.json());
 
 // -----------------------PROMPT -===------------
 function buildPrompt(input) {
-  return `Write a clear, professional customer service message for this scenario: "${input}". Use empathetic, helpful language and vary phrasing slightly between responses to sound more natural. Keep it concise. Return only the message.`;
-
+  return `Please revise the following message for customer service use. Correct grammar, fix spelling, and improve flow while keeping the original structure and tone. Gently soften any harsh or blunt language to make it sound more polite and natural. Do not add or remove content. Return only the revised message. Respond in English:\n\n${input}`;
 }
 
 // ----------------- SHARED BLOCK GENERATOR -----------------
@@ -171,7 +170,7 @@ await axios.post(
 );
 
 try {
-  const prompt = `Please revise the following message for customer service use. Correct grammar, fix spelling, and improve flow while keeping the original structure and tone. Gently soften any harsh or blunt language to make it sound more polite and natural. Do not add or remove content. Do not include greetings or closings. Return only the revised message. Respond in English:\n\n${userText}`;
+const prompt = buildPrompt(userText);
 
   const aiRes = await axios.post(
     "https://api.openai.com/v1/chat/completions",
@@ -220,7 +219,7 @@ app.post("/fix", async (req, res) => {
       return res.status(400).json({ error: "Missing text" });
     }
 
-    const prompt = `Please revise the following message for customer service use. Correct grammar, fix spelling, and improve flow while keeping the original structure and tone. Gently soften any harsh or blunt language to make it sound more polite and natural. Do not add or remove content. Do not include greetings or closings. Return only the revised message. Respond in English:\n\n${userText}`;
+const prompt = buildPrompt(text);
 
     const aiRes = await axios.post(
       "https://api.openai.com/v1/chat/completions",
