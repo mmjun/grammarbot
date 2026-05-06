@@ -213,6 +213,10 @@ const prompt = buildPrompt(userText);
 // ----------------- FIX ENDPOINT -----------------
 app.post("/fix", async (req, res) => {
   try {
+    if (req.headers["x-api-key"] !== process.env.INTERNAL_KEY) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
     const { text } = req.body;
 
     if (!text || !text.trim()) {
